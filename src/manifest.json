@@ -1,0 +1,42 @@
+{
+  "package": "top.chorblack.calendar",
+  "name": "日历",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "appCategory": [
+    "other"
+  ],
+  "icon": "/assets/images/logo.png",
+  "features": [
+    {
+      "name": "blueos.app.appmanager.router"
+    },
+    { "name": "blueos.hardware.deviceInfo" }
+  ],
+  "deviceTypeList": [
+    "watch",
+    "watch-square"
+  ],
+  "config": {
+    "designWidth": 466
+  },
+  "router": {
+    "entry": "pages/logo",
+    "pages": {
+      "pages/logo": {
+        "component": "index"
+      },
+      "pages/index": {
+        "component": "index"
+      }
+      ,
+      "pages/detail": {
+        "component": "index"
+      }
+    }
+  },
+  "display": {
+    "backgroundColor": "#000000"
+  },
+  "permissions": [{ "name": "watch.permission.DEVICE_INFO" }]
+}

@@ -1,0 +1,286 @@
+<template>
+  <div class="home-page" @swipe="handleSwipe">
+    <div class="header">
+      <div class="year-month">
+        <text class="title" style="color: white;">{{ year }}年</text>
+        <text class="title" style="color: white;">{{ formattedMonth }}月</text>
+      </div>
+      <div class="week-head">
+        <text class="week-text weekend">日</text>
+        <text class="week-text">一</text>
+        <text class="week-text">二</text>
+        <text class="week-text">三</text>
+        <text class="week-text">四</text>
+        <text class="week-text">五</text>
+        <text class="week-text weekend">六</text>
+      </div>
+      <div class="divider"></div>
+    </div>
+    <div class="list">
+      <div for="row in list" class="item" style="height: {{height}}">
+        <div class="cell" for="cell in row" tid="id">
+          <text @click="handleClick(cell)" class="{{cell.className}}">
+            {{ cell.value }}
+          </text>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@blueos.app.appmanager.router";
+import app from '@blueos.app.context';
+export default {
+	data: {
+		date: new Date(),
+		year: "",
+		month: "",
+		list: null,
+		height: "50px",
+		formattedMonth: '',// 用于存储格式化后的月份
+		index: 0,
+	},
+	onInit() {
+		this.initList();
+		this.getCalendar();
+		this.formattedMonth = this.month < 10 ? `0${this.month}` : this.month;
+	},
+	initList() {
+		let list = [];
+		for (let i = 0; i < 5; i++) {
+			let initArray = new Array(7).fill("x").map((_) => {
+				return {
+					value: "",
+					className: "",
+				};
+			});
+			list.push(initArray);
+		}
+
+		this.list = list;
+	},
+	backClick() {
+		app.terminate();
+	},
+
+	isToday(yy, mm, dd) {
+		const date = new Date();
+		const year = date.getFullYear();
+		const month = date.getMonth() + 1;
+		const day = date.getDate();
+		return yy === year && mm === month && dd === day;
+	},
+
+	getCalendar() {
+		const date = new Date();
+		const year = date.getFullYear();
+		const month = date.getMonth();
+		// 获取当月第一天为周几
+		const firstDay = new Date(year, month + this.index, 1).getDay();
+
+
+		// 获取当月的天数
+		const days = new Date(year, month + 1 + this.index, 0).getDate();
+		const monthOffset = month + this.index;
+		this.month = ((monthOffset % 12) + 12) % 12 + 1; // 确保月份在 1-12 之间
+		this.year = year + Math.floor(monthOffset / 12); // 更新年份
+
+		const rows = Math.ceil((days + firstDay) / 7);
+		this.updateListRows(rows);
+		this.height = 300 / rows + "px";
+
+		/**
+		 * 更新日历：
+		 * 1. 从当月第一天开始，根据总天数来进行更新
+		 * 2. 前面的空白和后面的空白用“”来填充
+		 * 3. 样式为“”或者“today”
+		 */
+		let count = 1;
+		for (let i = 0; i < rows; i++) {
+			for (let j = 0; j < 7; j++) {
+				if (j === 0 || j === 6) {
+					this.list[i][j].className = "cell-text-weekend";
+				} else {
+					this.list[i][j].className = "cell-text-workday";
+				}
+
+				if (i === 0 && j < firstDay) {
+					this.list[i][j].value = "";
+					continue;
+				}
+				if (count > days) {
+					this.list[i][j].value = "";
+					continue;
+				}
+
+				this.list[i][j].value = count;
+				this.list[i][j].id = "" + this.year + this.month + count;
+
+				if (this.isToday(this.year, this.month, count)) {
+					this.list[i][j].className = "cell-text-today";
+				}
+
+				count += 1;
+			}
+		}
+	},
+
+	updateListRows(rows) {
+		while (this.list.length < rows) {
+			let initArray = new Array(7).fill("x").map((_) => {
+				return {
+					value: "",
+					className: "",
+				};
+			});
+			this.list.push(initArray);
+		}
+
+		while (this.list.length > rows) {
+			this.list.pop();
+		}
+	},
+
+	prevMonth() {
+		this.date = new Date(this.year, this.month - 1 + this.index, 0);
+		this.getCalendar();
+		this.formattedMonth = this.month < 10 ? `0${this.month}` : this.month;
+	},
+
+	nextMonth() {
+		this.date = new Date(this.year, this.month + 1 + this.index, 0);
+		this.getCalendar();
+		this.formattedMonth = this.month < 10 ? `0${this.month}` : this.month;
+	},
+
+	handleClick(item) {
+		if (item.value === "") return;
+		router.push({
+			uri: "pages/detail",
+			params: {
+				year: this.year,
+				month: this.month,
+				day: item.value,
+			},
+		});
+	},
+
+	handleSwipe(eve) {
+		console.log(eve);
+		if (eve.direction == "up") {
+			this.index++;
+			this.nextMonth();
+		} else if (eve.direction == "down") {
+			this.index--;
+			this.prevMonth();
+		}
+	},
+};
+</script>
+
+<style>
+.home-page {
+  width: 100%;
+  height: 100%;
+  border-radius: 240px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  width: 100%;
+  height: 110px;
+  margin-top: 20px;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.year-month {
+  width: 240px;
+  height: 60px;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 40px;
+}
+
+.red {
+  color: #f00;
+}
+
+.week-head {
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.week-text {
+  width: 64px;
+  font-size: 40px;
+  font-weight: 700;
+  color: rgb(255, 255, 255);
+  text-align: center;
+}
+
+.weekend {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.divider {
+  width: 100%;
+  height: 2px;
+  margin-top: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.list {
+  width: 100%;
+  height: 350px;
+  flex-direction: column;
+}
+
+.item {
+  width: 100%;
+  height: 80px; /* 增加每一行的高度 */
+  margin-bottom: 10px; /* 增加行与行之间的间距 */
+}
+
+.cell {
+  width: 64px;
+  height: 100%;
+}
+
+.cell-text-workday {
+  width: 100%;
+  height: 100%;
+  font-weight: 700;
+  font-size: 40px; /* 调整为你需要的大小 */
+  text-align: center;
+  color: rgb(255, 255, 255);
+  background-color: transparent;
+}
+
+.cell-text-weekend {
+  width: 100%;
+  height: 100%;
+  font-weight: 700;
+  font-size: 40px; /* 调整为你需要的大小 */
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  background-color: transparent;
+}
+
+.cell-text-today {
+  width: 100%;
+  height: 100%;
+  font-weight: 700;
+  text-align: center;
+  color: rgba(255, 255, 255, 1);
+  background-color: #ff3a3a;
+}
+</style>

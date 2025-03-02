@@ -1,0 +1,26 @@
+<script>
+/**
+ * 应用级别的配置，供所有页面公用
+ */
+import device from '@blueos.hardware.deviceInfo'
+export default {
+  onCreate() {
+    device.getInfo({
+      success: (res) => {
+        this.setScreenShape(res.model);
+      },
+      fail: function () {},
+    });
+  },
+
+  setScreenShape(shape) {
+    this.screenShape = shape;
+    console.log(shape)
+  },
+
+  onDestroy() {
+    console.info("Application onDestroy");
+  }
+
+};
+</script>
